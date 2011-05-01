@@ -19,36 +19,19 @@ require 'active_record'
 require 'iconv'
 require 'pp'
 
-PROJECTS = Hash.new
-PROJECTS["Umit"] = "Umit Network Scanner"
-PROJECTS["RadialNet"] = "Umit Network Scanner"
-PROJECTS["NetworkInventory"] = "Umit Network Scanner"
-PROJECTS["Umit 0.9.5"] = "Umit Network Scanner"
-PROJECTS["UmitPlugins"] = "Umit Network Scanner"
-PROJECTS["InterfaceEditor"] = "Umit Network Scanner"
-PROJECTS["umitGUI"] = "Umit Network Scanner"
-PROJECTS["umitCore"] = "Umit Network Scanner"
-PROJECTS["UmitBT"] = "Umit Network Scanner"
-PROJECTS["Documentation"] = "Umit Project Organization"
-PROJECTS["website"] = "Umit Project Organization"
-PROJECTS["CrashReport"] = "Umit Network Scanner"
-PROJECTS["PacketManipulator"] = "PacketManipulator"
-PROJECTS["BluetoothSniffer"] = "PacketManipulator"
-PROJECTS["UMPA"] = "UMPA"
-PROJECTS["umitWeb"] = "Umit Web" 
 
 
-
-#PROJECTS = ["Umit Network Scanner", 
+#@projects = ["Umit Network Scanner",
 #    "UMPA",
-#    "PacketManipulator", 
+#    "PacketManipulator",
 #    "Umit Project Organization", "ICM"]
 
-namespace :redmine do
+namespace :umit do
   desc 'Trac migration script'
   task :migrate_from_trac => :environment do
 
-    module TracMigrate
+  module Umit; end
+    module Umit::TracMigrate
         TICKET_MAP = []
 
         DEFAULT_STATUS = IssueStatus.default
@@ -687,6 +670,39 @@ namespace :redmine do
       def self.trac_db_path; "#{trac_directory}/db/trac.db" end
       def self.trac_attachments_directory; "#{trac_directory}/attachments" end
 
+      def self.projects
+        @projects ||= create_projects!(
+          "Umit" => "Umit Network Scanner",
+          "RadialNet" => "Umit Network Scanner",
+          "NetworkInventory" => "Umit Network Scanner",
+          "Umit 0.9.5" => "Umit Network Scanner",
+          "UmitPlugins" => "Umit Network Scanner",
+          "InterfaceEditor" => "Umit Network Scanner",
+          "umitGUI" => "Umit Network Scanner",
+          "umitCore" => "Umit Network Scanner",
+          "UmitBT" => "Umit Network Scanner",
+          "Documentation" => "Umit Project Organization",
+          "website" => "Umit Project Organization",
+          "CrashReport" => "Umit Network Scanner",
+          "PacketManipulator" => "PacketManipulator",
+          "BluetoothSniffer" => "PacketManipulator",
+          "UMPA" => "UMPA",
+          "umitWeb" => "Umit Web"
+        )
+      end
+
+      def self.create_projects(project_names)
+        Project.class_eval do
+          attr_accessor :component
+        end
+        project_names.inject({}) do |hash, name|
+          Project.create!(:name => identifier.humanize, :description => '', :identifier => identifier)
+          hash.merge(name => project)
+        end
+
+
+      end
+
       def self.target_project_identifier(identifier)
         project = Project.find_by_identifier(identifier)
         if !project
@@ -768,25 +784,25 @@ namespace :redmine do
       end
     end
 
-    DEFAULT_PORTS = {'mysql' => 3306, 'postgresql' => 5432}
+    # DEFAULT_PORTS = { 'mysql' => 3306, 'postgresql' => 5432 } unless unless defined?(DEFAULT_PORTS)
 
-    prompt('Trac directory') {|directory| TracMigrate.set_trac_directory directory.strip}
-    prompt('Trac database adapter (sqlite, sqlite3, mysql, postgresql)', :default => 'sqlite') {|adapter| TracMigrate.set_trac_adapter adapter}
-    unless %w(sqlite sqlite3).include?(TracMigrate.trac_adapter)
-      prompt('Trac database host', :default => 'localhost') {|host| TracMigrate.set_trac_db_host host}
-      prompt('Trac database port', :default => DEFAULT_PORTS[TracMigrate.trac_adapter]) {|port| TracMigrate.set_trac_db_port port}
-      prompt('Trac database name') {|name| TracMigrate.set_trac_db_name name}
-      prompt('Trac database schema', :default => 'public') {|schema| TracMigrate.set_trac_db_schema schema}
-      prompt('Trac database username') {|username| TracMigrate.set_trac_db_username username}
-      prompt('Trac database password') {|password| TracMigrate.set_trac_db_password password}
+    prompt('Trac directory') {|directory| Umit::TracMigrate.set_trac_directory directory.strip}
+    prompt('Trac database adapter (sqlite, sqlite3, mysql, postgresql)', :default => 'sqlite') {|adapter| Umit::TracMigrate.set_trac_adapter adapter}
+    unless %w(sqlite sqlite3).include?(Umit::TracMigrate.trac_adapter)
+      prompt('Trac database host', :default => 'localhost') {|host| Umit::TracMigrate.set_trac_db_host host}
+      prompt('Trac database port', :default => DEFAULT_PORTS[Umit::TracMigrate.trac_adapter]) {|port| Umit::TracMigrate.set_trac_db_port port}
+      prompt('Trac database name') {|name| Umit::TracMigrate.set_trac_db_name name}
+      prompt('Trac database schema', :default => 'public') {|schema| Umit::TracMigrate.set_trac_db_schema schema}
+      prompt('Trac database username') {|username| Umit::TracMigrate.set_trac_db_username username}
+      prompt('Trac database password') {|password| Umit::TracMigrate.set_trac_db_password password}
     end
-    prompt('Trac database encoding', :default => 'UTF-8') {|encoding| TracMigrate.encoding encoding}
-    prompt('Target project identifier') {|identifier| TracMigrate.target_project_identifier identifier}
+    prompt('Trac database encoding', :default => 'UTF-8') {|encoding| Umit::TracMigrate.encoding encoding}
+#    prompt('Target project identifier') {|identifier| Umit::TracMigrate.target_project_identifier identifier}
     puts
-    
+
     # Turn off email notifications
     Setting.notified_events = []
-    
+
     TracMigrate.migrate
   end
 end
